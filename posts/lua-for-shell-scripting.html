@@ -1,0 +1,454 @@
+<DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="">
+    <style>
+    
+    @font-face {
+        font-family: 'Departure';
+        src: url(/DepartureMono-Regular.woff);
+    }
+    
+    body * {
+      font-family: 'Departure', monospace;
+    }
+    
+    body {
+      background-color: #e0f8d0;
+      color: #081820;
+      font-size: 12pt;
+      line-height: 1.4em;
+    }
+    
+    #site-header {
+      margin-bottom: 2em;
+      border: 1px solid black;
+    }
+
+    #site-header h1 {
+      font-size: 1.5em;
+      text-align: center;
+    }
+
+    #home-link {
+      background-color: #e0f8d0;
+      color: #081820;
+      text-decoration: none;
+      font-style: italic;
+      border-top: 0.1em solid black;
+      border-bottom: 0.1em solid black;
+    }
+    
+    #site-header li a, main a {
+      color: #346856;
+    }
+
+    #site-header ul {
+      list-style: none;
+      padding-left: 0;
+      text-align: center;
+    }
+
+    #site-header li {
+      display: inline-block;
+      margin-left: 1em;
+      margin-top: 1em;
+      font-size: 1.2em;
+    }
+    
+    #page-header {
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      font-style: italic;
+      border: 0.3em #88c070 outset;
+      padding: 0.7em;
+      margin-bottom: 4em;
+    }
+    
+    #page-header p {
+      margin-bottom: 0;
+    }
+    
+    #page-header h1 {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    #post-list {
+    }
+
+    #post-list li {
+    }
+
+    main {
+      border: 1px solid #081820;
+      padding: 1em;
+    }
+
+    main > p,
+    main > ul,
+    main > ol,
+    main > pre {
+      margin-bottom: 2em;
+    }
+    
+    main p > code,
+    main h1 > code,
+    main h2 > code,
+    main h3 > code {
+      padding-left: 0.2em;
+      padding-right: 0.2em;
+      border-radius: 0.3em;
+      background-color: #081820;
+      color: #e0f8d0;
+    }
+
+    main > pre {
+      padding: 0.6em;
+      background-color: #081820;
+      color: #e0f8d0;
+      border-radius: 0.5em;
+      overflow: scroll;
+    }
+    
+    main h2, main h3 {
+      margin-top: 3em;
+      line-height: 1.4em;
+      border-left: 0.3em #081820 solid;
+      padding-left: 0.3em;
+    }
+
+    main blockquote {
+      color: #081820;
+      background-color: #88c070;
+      margin-left: 0;
+      margin-right: 0;
+      padding: 0.1em 0.5em;
+    }
+
+    main blockquote strong {
+      background-color: #e0f8d0;
+    }
+
+    #site-footer {
+      text-align: center;
+      padding: 1em;
+      background-color: #346856;
+      color: #e0f8d0;
+    }
+    
+    </style>
+    <title>Lua for shell scripting - Robasonite</title>
+  </head>
+  <body>
+    <header id="site-header">
+      <h1><a id="home-link" href="/">Robasonite</a></h1>
+      <nav>
+        <ul>
+        <li><a href="https://github.com/robasonite">GitHub</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/posts/hi-there.html">Hi there!</a></li>
+        
+        </ul>
+      </nav>
+    </header>
+    <main>
+    
+<header id="page-header">
+  <h1>Lua for shell scripting</h1>
+  <p class="meta">Posted on Sun Apr 06, 2025</p>
+</header>
+<p>Lua is a <em>tiny</em> embeddable scripting language with <em>just enough</em> features to be useful. Weighing in at less than 500KB (depending on platform and build options), it's the smallest language I've seen with the ability to work with nested data structures <em>and</em> get output from shell commands. This makes it ideal for shell scripting among other things.</p>
+<h2>Running shell commands</h2>
+<p>This first example shows how to run a command and tell if it succeeded.</p>
+<pre><code class="language-lua">local success = os.execute('mkdir demo')
+if success then
+    print('successfully created directory')
+else
+    print(&quot;ERROR RUNNING 'mkdir demo'!&quot;)
+    os.exit(1)
+end
+</code></pre>
+<p>If the command succeeds, the program keeps running because <code>success</code> gets a <code>true</code> value. If not, it returns <code>1</code> to the OS, which signals failure on Unix-like systems. This is an import thing to catch in our scripts to minimize the damage done if a command fails. Otherwise, just like the shell itself, Lua would keep running the rest of the script.</p>
+<p>We can put the code in a function like this:</p>
+<pre><code class="language-lua">-- file: shellexec.lua
+-- Execute a command and check that it succeeded.
+-- If the command doesn't succeed, an error is automatically printed.
+function shell_run(cmd)
+  local success = os.execute(cmd)
+  if success then
+    return true
+  else
+    print(&quot;ERROR RUNNING '&quot; .. cmd .. &quot;'!&quot;)
+    os.exit(1)
+  end
+end
+</code></pre>
+<p>This is great for commands that just <em>do stuff</em> and don't generate useful output.</p>
+<blockquote>
+<p><strong>NOTE:</strong> The <code>..</code> in the code sample above is Lua's <em>concatenation</em> operator. It's used to glue strings together.</p>
+</blockquote>
+<h2>Getting output from shell commands</h2>
+<p>But what if we need output from a command? Lua has <code>io.popen</code>.</p>
+<pre><code class="language-lua">-- file: shellexec.lua
+function get_output(cmd)
+  local handle = io.popen(cmd)
+  local stdout = handle:read(&quot;*all&quot;)
+  success = handle:close()
+
+  if success then
+    return stdout
+  else
+    print(&quot;ERROR RUNNING '&quot; .. cmd .. &quot;'!&quot;)
+    os.exit(1)
+  end
+end
+</code></pre>
+<p>Similar to <code>os.execute()</code>, <code>handle:close()</code> will return a <code>true</code> value on success. And the only way <code>handle:close()</code> returns <code>true</code> is if there's a <em>handle</em> to <em>close</em>.</p>
+<h2>Accessing environment variables</h2>
+<p>Lua can not <em>set</em> environment variables, but it can <em>get</em> them with <code>os.getenv()</code>. It returns <code>nil</code> if the variable is not defined.</p>
+<pre><code class="language-lua">-- Demo from the Lua REPL:
+&gt; print(os.getenv(&quot;HOME&quot;))
+/data/data/com.termux/files/home
+</code></pre>
+<h2>Handling JSON</h2>
+<p>Lua already has <em>tables</em> for handling nested key/value data structures, but sharing them with other programs is problematic. For that, we're going to need a some kind of <em>universal data format</em>. Right now, the one with the largest number of implementations is <a href="">JSON</a>, so we can use that. With Lua, we have a choice: we can shoe-horn JSON support into our scripts with <a href="https://jqlang.org">JQ</a> <em>or</em> use a Lua library like <a href="https://github.com/grafi-tt/lunajson">Lunajson</a>.</p>
+<p>As fun as it would be to write a bunch of wrapper functions for JQ, Lunajson is the path of least resistance. Assuming we put all of our Lua scripts in the same directory, say <code>$HOME/lua_scripts/</code>, one would think we should be able to stick Lunajson in <code>$HOME/lua_scripts/lib/</code> and load it like this:</p>
+<pre><code class="language-lua">-- file: shellexec.lua
+local lunajson = require 'libs/lunajson'
+</code></pre>
+<p>But if we do that, we get this:</p>
+<pre><code class="language-plain">lua: ./libs/lunajson.lua:1: module 'lunajson.decoder' not found:
+        no field package.preload['lunajson.decoder']
+        no file '/usr/local/share/lua/5.3/lunajson/decoder.lua'
+        no file '/usr/local/share/lua/5.3/lunajson/decoder/init.lua'
+        no file '/usr/local/lib/lua/5.3/lunajson/decoder.lua'
+        no file '/usr/local/lib/lua/5.3/lunajson/decoder/init.lua'
+        no file '/usr/share/lua/5.3/lunajson/decoder.lua'
+        no file '/usr/share/lua/5.3/lunajson/decoder/init.lua'
+        no file './lunajson/decoder.lua'
+        no file './lunajson/decoder/init.lua'
+        no file '/usr/local/lib/lua/5.3/lunajson/decoder.so'
+        no file '/usr/lib/x86_64-linux-gnu/lua/5.3/lunajson/decoder.so'
+        no file '/usr/lib/lua/5.3/lunajson/decoder.so'
+        no file '/usr/local/lib/lua/5.3/loadall.so'
+        no file './lunajson/decoder.so'
+        no file '/usr/local/lib/lua/5.3/lunajson.so'
+        no file '/usr/lib/x86_64-linux-gnu/lua/5.3/lunajson.so'
+        no file '/usr/lib/lua/5.3/lunajson.so'
+        no file '/usr/local/lib/lua/5.3/loadall.so'
+        no file './lunajson.so'
+stack traceback:
+        [C]: in function 'require'
+        ./libs/lunajson.lua:1: in main chunk
+        [C]: in function 'require'
+        shellexec.lua:2: in main chunk
+        [C]: in ?
+
+</code></pre>
+<h3>The <code>package.path</code> problem</h3>
+<p>This happens because Lua isn't smart enough to perform relative <code>require</code>s properly. We have to explicitly tell it where to look with an environment variable. First, fix the import:</p>
+<pre><code class="language-lua">-- file: shellexec.lua
+local lunajson = require 'lunajson'
+</code></pre>
+<p>Then call the script with the magic variable:</p>
+<pre><code class="language-plain">$ LUA_PATH=&quot;$HOME/lua_scripts/lib/?.lua;;&quot; lua shellexec.lua
+</code></pre>
+<p>The two trailing semicolons in <code>$HOME/lua_scripts/lib/?.lua;;</code> tell Lua to <em>add the path</em> to the list of locations to be searched when it sees a <code>require</code> statement. That way, we can still use libraries installed with a package manager. The <code>?.lua</code> part tells Lua to only use files that end in <code>.lua</code>. Yes, you can technically use <em>any</em> extension for your Lua files, but you should probably stick with <code>.lua</code>. We can see the existing list of search paths by running this command in our shell:</p>
+<pre><code class="language-plain"># 'sed' is used to split the long string into a list for easy viewing.
+lua -e 'print(package.path)' | sed -e 's/;/;\n/g'
+/usr/local/share/lua/5.3/?.lua;
+/usr/local/share/lua/5.3/?/init.lua;
+/usr/local/lib/lua/5.3/?.lua;
+/usr/local/lib/lua/5.3/?/init.lua;
+/usr/share/lua/5.3/?.lua;
+/usr/share/lua/5.3/?/init.lua;
+./?.lua;
+./?/init.lua
+</code></pre>
+<p>For convenience, we can add the <code>LUA_PATH</code> variable to our <code>.bashrc</code> file (or whatever RC file the shell uses). For Bash, this line is sufficient:</p>
+<pre><code class="language-shell">export LUA_PATH=&quot;$HOME/lua_scripts/lib/?.lua;;&quot;
+</code></pre>
+<h3>Parsing and emitting JSON</h3>
+<p>With that out of the way, we can export data structures to JSON for consumption by other programs:</p>
+<pre><code class="language-lua">-- file: json_demo.lua
+-- load lunajson
+local lunajson = require 'lunajson'
+
+-- Make a demo table
+car = {}
+car.make = 'honda'
+car.model = 'accord'
+car.year = '2001'
+
+-- Print out the key/value pairs
+for k,v in pairs(car) do
+  print(k .. &quot;: &quot; .. v)
+end
+
+-- Encode to JSON
+myjson = lunajson.encode(car)
+print(myjson)
+</code></pre>
+<p>Here's the output:</p>
+<pre><code class="language-plain">make: honda
+year: 2001
+model: accord
+{&quot;make&quot;:&quot;honda&quot;,&quot;year&quot;:&quot;2001&quot;,&quot;model&quot;:&quot;accord&quot;}
+</code></pre>
+<p>As far as I can tell, Lunajson doesn't support <em>pretty printing</em>, but I don't know of any cases where that would prevent a program from parsing the data. If we need some kind of pretty-printing, there are multiple ways to do it.</p>
+<blockquote>
+<p><strong>NOTE:</strong> For demonstration purposes, I commented out the <code>for</code> loop in the code sample above so that the program only prints out the JSON string.</p>
+</blockquote>
+<blockquote>
+<p><strong>YET ANOTHER NOTE:</strong> Lua is a bit of an oddball among programming languages because it starts counting array elements from <em>1</em> instead of <em>0</em>. Another odd feature is the fact that <em>tables</em> are used both as traditional arrays <em>and</em> as key/value nested data structures.</p>
+</blockquote>
+<h3>Ways to pretty print JSON</h3>
+<p>We can use the JQ program mentioned earlier:</p>
+<pre><code class="language-plain">$ lua json_demo.lua | jq .
+{
+  &quot;make&quot;: &quot;honda&quot;,
+  &quot;model&quot;: &quot;accord&quot;,
+  &quot;year&quot;: &quot;2001&quot;
+}
+</code></pre>
+<p>We can use a bit of <code>sed</code> magic to get one-level deep formatting:</p>
+<pre><code class="language-plain">$ lua json_demo.lua | sed -e 's/{/{\n  /g' | sed -e 's/:/: /g' | sed -e 's/,/\n  /g' | sed 's/}/\n}/g'
+{
+  &quot;year&quot;: &quot;2001&quot;
+  &quot;make&quot;: &quot;honda&quot;
+  &quot;model&quot;: &quot;accord&quot;
+}
+</code></pre>
+<p>If we want to <em>big-brain</em> it, we can use <a href="https://stackoverflow.com/a/38607019">Evgeny Karpov's solution posted on Stack Overflow</a>, which involves a bit of line-noise wizardry with Bash and Awk:</p>
+<pre><code class="language-shell">#/usr/bin/bash
+# file: json_pretty.sh
+
+grep -Eo '&quot;[^&quot;]*&quot; *(: *([0-9]*|&quot;[^&quot;]*&quot;)[^{}\[&quot;]*|,)?|[^&quot;\]\[\}\{]*|\{|\},?|\[|\],?|[0-9 ]*,?' | awk '{if ($0 ~ /^[}\]]/ ) offset-=4; printf &quot;%*c%s\n&quot;, offset, &quot; &quot;, $0; if ($0 ~ /^[{\[]/) offset+=4}'
+</code></pre>
+<p>Which gives us the following output:</p>
+<pre><code class="language-plain">$ lua json_demo.lua | json_pretty.sh
+ {
+    &quot;make&quot;:&quot;honda&quot;,
+    &quot;year&quot;:&quot;2001&quot;,
+    &quot;model&quot;:&quot;accord&quot;
+ }
+
+</code></pre>
+<p>And of course there are a bunch of other ways to do it, including heavy-handed approaches using languages with native JSON support (Ruby, Python, etc).</p>
+<h2>Let's make it a library!</h2>
+<p>Turning the <code>shellexec.lua</code> file into a library we can <code>require</code> into other scripts isn't that hard. All we have to do is add the functions to a table and return it. Here is the <em>complete</em> file:</p>
+<pre><code class="language-lua">-- file: shellexec.lua
+-- Create an empty table
+local shellexec = {}
+
+-- Execute a command and check that it succeeded.
+-- If the command doesn't succeed, an error is automatically printed.
+function shellexec.run(cmd)
+  local success = os.execute(cmd)
+  if success then
+    return true
+  else
+    print(&quot;ERROR RUNNING '&quot; .. cmd .. &quot;'!&quot;)
+    os.exit(1)
+  end
+end
+
+
+-- io.popen() Runs a command, and returns a handle which can be used to read
+-- the command’s output. Success or failure of the command is reported as the
+-- first return value when closing the handle.
+function shellexec.get_output(cmd)
+  local handle = io.popen(cmd)
+  local stdout = handle:read(&quot;*all&quot;)
+  success = handle:close()
+
+  if success then
+    return stdout
+  else
+    print(&quot;ERROR RUNNING '&quot; .. cmd .. &quot;'!&quot;)
+    os.exit(1)
+  end
+end
+
+return shellexec
+</code></pre>
+<p>Yes, tables in Lua can hold functions. Assuming we stick <code>shellexec.lua</code> in the path we specified with <code>LUA_PATH</code> earlier, we should be able to <code>require</code> it just like any other library. Here's what that looks like:</p>
+<pre><code class="language-lua">-- file: shell_demo.lua
+local shellexec = require 'shellexec'
+
+stuff = shellexec.get_output('ls')
+print(stuff)
+</code></pre>
+<h2>What about command line arguments?</h2>
+<p>Shell scripts become a lot more useful when you can feed them command line arguments. Lua allows this too with the <code>arg</code> global table. We can use it like this:</p>
+<pre><code class="language-lua">-- file: args_demo.lua
+for k, v in ipairs(arg) do
+  print(k .. &quot;: &quot; .. v)
+end
+</code></pre>
+<p>And when we run it, we get this:</p>
+<pre><code class="language-plain">$ lua args_demo.lua thing1 thing2 thing3
+1: thing1
+2: thing2
+3: thing3
+</code></pre>
+<p>Unlike some other programming languages, the <em>name of the script file</em> and the <em>command used to call it</em> (&quot;lua&quot; in this case) are both stripped from the list of command line arguments <em>automatically</em>. This make writing the logic to handle these arguments a bit easier. Here's a short demo program to show how the <code>arg</code> global table might be used.</p>
+<pre><code class="language-lua">-- file: cli_demo.lua
+local shellexec = require 'shellexec'
+function path_check(path)
+  output = shellexec.get_output('if [ -d ' .. path ..' ]; then echo 1; else echo 0; fi')
+  print(tonumber(output))
+  if tonumber(output) == 1 then
+    return true
+  else
+    return false
+  end
+end
+
+function print_help()
+  print(&quot;Usage:&quot;)
+  print(&quot;ls_demo &lt;option&gt; &lt;path&gt;&quot;)
+  print(&quot;Valid arguments:&quot;)
+  print(&quot;short -- List only the names of the file and directories in &lt;path&gt;&quot;)
+  print(&quot;all   -- List all of the details of the files and directories in&quot;)
+  print(&quot;         &lt;path&gt;&quot;)
+  print(&quot;tree  -- Print out a tree of the files and directories in &lt;path&gt;&quot;)
+  os.exit(1)
+end
+
+if #arg ~= 2 then
+  print_help()
+else
+  local option = arg[1]
+  local path = arg[2]
+
+  if path_check(path) then
+    if option == &quot;short&quot; then
+      shellexec.run('ls ' .. path)
+    elseif option == &quot;all&quot; then
+      shellexec.run('ls -lah ' .. path)
+    elseif option == &quot;tree&quot; then
+      shellexec.run('tree ' .. path)
+    else
+      print_help()
+    end
+  else
+    print(&quot;Problem read path: '&quot; .. path .. &quot;'!&quot;)
+    os.exit(1)
+  end
+end
+</code></pre>
+<p>Lets start with the <code>path_check()</code> function above, which shows off why the <code>shellexec</code> library we made is actually useful. Lua doesn't have much in the way of file or directory handling functions. We can't check to see if a directory exists directly, but we can use an inline <code>if..else</code> shell command to return one string if a file exists, or another string if it doesn't. Yes, when getting output from shell commands, the result will <em>always</em> be a string. The <code>tonumber()</code> function is used to convert the string into a number, which can then be checked.</p>
+<p>The next part is a straightforward &quot;help text&quot; printing function. After that is the main logic of the script. The <code>#</code> symbol is how we get the number of <em>top-level keys</em> in a table. The <code>~=</code> bit is the <em>not-equal operator</em> Lua uses. This is another thing that will trip people up because most other languages use <code>!=</code>. Just remember that <code>~=</code> means <code>!=</code> in Lua. From there, the logic for running the shell commands should be obvious.</p>
+
+    </main>
+    <footer id="site-footer">
+    <p>Copyright 2025 RJK, CC BY-NC-SA 4.0</p>
+    </footer>
+  </body>
+</html>

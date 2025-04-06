@@ -11,12 +11,15 @@
         src: url(/DepartureMono-Regular.woff);
     }
     
+    body * {
+      font-family: 'Departure', monospace;
+    }
+    
     body {
       background-color: #e0f8d0;
       color: #081820;
-      font-family: 'Departure', monospace;
-      font-size: 10pt;
-      line-height: 1.2em;
+      font-size: 12pt;
+      line-height: 1.4em;
     }
     
     #site-header {
@@ -92,6 +95,17 @@
     main > pre {
       margin-bottom: 2em;
     }
+    
+    main p > code,
+    main h1 > code,
+    main h2 > code,
+    main h3 > code {
+      padding-left: 0.2em;
+      padding-right: 0.2em;
+      border-radius: 0.3em;
+      background-color: #081820;
+      color: #e0f8d0;
+    }
 
     main > pre {
       padding: 0.6em;
@@ -104,13 +118,20 @@
     main h2, main h3 {
       margin-top: 3em;
       line-height: 1.4em;
+      border-left: 0.3em #081820 solid;
+      padding-left: 0.3em;
     }
 
-    main > blockquote {
-      color: #e0f8d0;
+    main blockquote {
+      color: #081820;
       background-color: #88c070;
       margin-left: 0;
       margin-right: 0;
+      padding: 0.1em 0.5em;
+    }
+
+    main blockquote strong {
+      background-color: #e0f8d0;
     }
 
     #site-footer {
@@ -128,6 +149,7 @@
       <h1><a id="home-link" href="/">Robasonite</a></h1>
       <nav>
         <ul>
+        <li><a href="https://github.com/robasonite">GitHub</a></li>
         <li><a href="/about.html">About</a></li>
         <li><a href="/posts/hi-there.html">Hi there!</a></li>
         
@@ -141,8 +163,14 @@
     <ul id="post-list">
     
                 <li>
+                  <h2><a href="/posts/lua-for-shell-scripting.html">Lua for shell scripting</a></h2>
+                  <p class="post-meta">Posted on Sun Apr 06, 2025</p>
+                    <p>Using a better syntax for shell scripting</p>
+                </li>
+                
+                <li>
                   <h2><a href="/posts/hi-there.html">Hi there!</a></h2>
-                  <p class="post-meta">Posted on Sun Mar 30, 2025</p>
+                  <p class="post-meta">Posted on Wed Apr 02, 2025</p>
                     <p>About RJK</p>
                 </li>
                 </ul>
