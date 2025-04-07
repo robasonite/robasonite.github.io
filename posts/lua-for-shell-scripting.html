@@ -397,7 +397,7 @@ end
 2: thing2
 3: thing3
 </code></pre>
-<p>Unlike some other programming languages, the <em>name of the script file</em> and the <em>command used to call it</em> (&quot;lua&quot; in this case) are both stripped from the list of command line arguments <em>automatically</em>. This make writing the logic to handle these arguments a bit easier. Here's a short demo program to show how the <code>arg</code> global table might be used.</p>
+<p>Unlike some other programming languages, the <em>name of the script file</em> and the <em>command used to call it</em> (&quot;lua&quot; in this case) are both stripped from the list of command line arguments <em>automatically</em>. This makes writing the logic to handle these arguments a bit easier. Here's a short demo program to show how the <code>arg</code> global table might be used.</p>
 <pre><code class="language-lua">-- file: cli_demo.lua
 local shellexec = require 'shellexec'
 function path_check(path)
