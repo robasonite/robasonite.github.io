@@ -173,7 +173,7 @@ else
     os.exit(1)
 end
 </code></pre>
-<p>If the command succeeds, the program keeps running because <code>success</code> gets a <code>true</code> value. If not, it returns <code>1</code> to the OS, which signals failure on Unix-like systems. This is an import thing to catch in our scripts to minimize the damage done if a command fails. Otherwise, just like the shell itself, Lua would keep running the rest of the script.</p>
+<p>If the command succeeds, the program keeps running because <code>success</code> gets a <code>true</code> value. If not, it returns <code>1</code> to the OS, which signals failure on Unix-like systems. This is an important thing to catch in our scripts to minimize the damage done if a command fails. Otherwise, just like the shell itself, Lua would keep running the rest of the script.</p>
 <p>We can put the code in a function like this:</p>
 <pre><code class="language-lua">-- file: shellexec.lua
 -- Execute a command and check that it succeeded.
@@ -216,7 +216,7 @@ end
 /data/data/com.termux/files/home
 </code></pre>
 <h2>Handling JSON</h2>
-<p>Lua already has <em>tables</em> for handling nested key/value data structures, but sharing them with other programs is problematic. For that, we're going to need a some kind of <em>universal data format</em>. Right now, the one with the largest number of implementations is <a href="">JSON</a>, so we can use that. With Lua, we have a choice: we can shoe-horn JSON support into our scripts with <a href="https://jqlang.org">JQ</a> <em>or</em> use a Lua library like <a href="https://github.com/grafi-tt/lunajson">Lunajson</a>.</p>
+<p>Lua already has <em>tables</em> for handling nested key/value data structures, but sharing them with other programs is problematic. For that, we're going to need some kind of <em>universal data format</em>. Right now, the one with the largest number of implementations is <a href="">JSON</a>, so we can use that. With Lua, we have a choice: we can shoe-horn JSON support into our scripts with <a href="https://jqlang.org">JQ</a> <em>or</em> use a Lua library like <a href="https://github.com/grafi-tt/lunajson">Lunajson</a>.</p>
 <p>As fun as it would be to write a bunch of wrapper functions for JQ, Lunajson is the path of least resistance. Assuming we put all of our Lua scripts in the same directory, say <code>$HOME/lua_scripts/</code>, one would think we should be able to stick Lunajson in <code>$HOME/lua_scripts/lib/</code> and load it like this:</p>
 <pre><code class="language-lua">-- file: shellexec.lua
 local lunajson = require 'libs/lunajson'
